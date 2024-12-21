@@ -1,0 +1,89 @@
+#!/bin/bash
+
+# bindall makes /mnt/ad64 and
+# unbindall makes links debhome and svn
+# directory /chrootenvironment is needed by bindall
+
+# format team
+mkfs.vfat -v -n EFI /dev/sda1
+mkfs.ext4 -v -j -L team /dev/sda2
+
+mount -L team /mnt/team
+
+# create boot/efi if it does not exist
+# mount dir
+test -d /mnt/team/boot/efi || mkdir -p /mnt/team/boot/efi
+mount -L EFI /mnt/team/boot/efi
+
+# mount /mnt/ad64 if not mounted
+findmnt /mnt/ad64
+test $? -eq 0 || mount /mnt/ad64
+
+# install linux
+debootstrap noble /mnt/team http://ubuntu.mirror.ac.za
+
+# make chrootenvironment directory
+# needed for bindall and unbindall
+test -d /mnt/team/chrootenvironment || mkdir /mnt/team/chrootenvironment
+
+# edit sources.list
+sed -i -e 's/main/main multiverse universe restricted/' /mnt/team/etc/apt/sources.list
+
+# edit fstab
+sed -i -e '/LABEL=team/d' /mnt/team/etc/fstab
+sed -i -e '/LABEL=ad64/d' /mnt/team/etc/fstab
+sed -i -e '$a\LABEL=team / ext4 defaults 0 1' /mnt/team/etc/fstab
+sed -i -e '$a\LABEL=ad64 /mnt/ad64 ext4 defaults,noauto 0 2' /mnt/team/etc/fstab
+
+# bind and chroot
+bindall -b /mnt/team
+
+
+chroot /mnt/team apt update
+
+chroot /mnt/team apt install linux-image-generic linux-headers-generic xz-utils subversion git nano gh rclone coreutils network-manager grub2-common grub-efi-amd64 grub-efi-amd64-signed net-tools iputils-ping openssh-server -y
+
+
+# make user robert
+chroot /mnt/team adduser --add-extra-groups --comment "robert key room103 0219596081 0218551556 nothing" robert
+
+# add robert to sudo group
+chroot /mnt/team adduser robert sudo
+
+# install config data for git rclone gh
+# and pubkey, sudo robert, debhome.sources
+# configdata needs xz-utils
+# user robert must exist
+cp -v /mnt/debhome/pool/myown/c/configdata/configdata*.deb /mnt/team/usr/local/bin/
+chroot /mnt/team dpkg -i /usr/local/bin/configdata_1.0.9_amd64.deb
+
+# update packages 
+chroot /mnt/team apt update
+
+# install builddebiantree
+chroot /mnt/team apt install builddebiantree -y
+
+#set root password
+chroot /mnt/team passwd
+
+unbindall -b /mnt/team
+
+# make /boot/grub if it does not exist
+test -d /mnt/team/boot/grub || mkdir -p /mnt/team/boot/grub
+
+# create empty /mnt/team/boot/grub/custom.cfg
+echo "# custom.cfg" > /mnt/team/boot/grub/custom.cfg
+
+# edit custom.cfg for grub
+sed -i -e 'a\set menu_color_normal=white/blue \
+set menu_color_highlight=red/light-gray \
+set color_normal=yellow/blue \
+set color_hightlight=red/black' /mnt/team/boot/grub/custom.cfg
+
+grub-install --root-directory=/mnt/team /dev/sda
+
+bindall -b /mnt/team
+chroot /mnt/team update-grub
+
+
+unbindall -b /mnt/team
