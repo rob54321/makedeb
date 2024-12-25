@@ -1,8 +1,22 @@
 #!/bin/bash
 
-# bindall makes /mnt/ad64 and
-# unbindall makes links debhome and svn
-# directory /chrootenvironment is needed by bindall
+# sub to bind directories
+bindall() {
+	mount --bind /proc /mnt/team/proc
+	mount --bind /sys /mnt/team/sys
+	mount --bind /tmp /mnt/team/tmp
+	mount --bind /dev /mnt/team/dev
+	mount --bind /dev/pts /mnt/team/dev/pts
+}
+
+# sub to unbindall
+unbindall() {
+	umount /mnt/team/dev/pts
+	umount /mnt/team/dev
+	umount /mnt/team/tmp
+	umount /mnt/team/sys
+	umount /mnt/team/proc
+}
 
 # format team
 mkfs.vfat -v -n EFI /dev/sda1
@@ -22,10 +36,6 @@ test $? -eq 0 || mount /mnt/ad64
 # install linux
 debootstrap noble /mnt/team http://ubuntu.mirror.ac.za
 
-# make chrootenvironment directory
-# needed for bindall and unbindall
-test -d /mnt/team/chrootenvironment || mkdir /mnt/team/chrootenvironment
-
 # edit sources.list
 sed -i -e 's/main/main multiverse universe restricted/' /mnt/team/etc/apt/sources.list
 
@@ -36,7 +46,7 @@ sed -i -e '$a\LABEL=team / ext4 defaults 0 1' /mnt/team/etc/fstab
 sed -i -e '$a\LABEL=ad64 /mnt/ad64 ext4 defaults,noauto 0 2' /mnt/team/etc/fstab
 
 # bind and chroot
-bindall -b /mnt/team
+bindall()
 
 
 chroot /mnt/team apt update
@@ -66,7 +76,7 @@ chroot /mnt/team apt install builddebiantree -y
 #set root password
 chroot /mnt/team passwd
 
-unbindall -b /mnt/team
+unbindall()
 
 # make /boot/grub if it does not exist
 test -d /mnt/team/boot/grub || mkdir -p /mnt/team/boot/grub
@@ -82,8 +92,8 @@ set color_hightlight=red/black' /mnt/team/boot/grub/custom.cfg
 
 grub-install --root-directory=/mnt/team /dev/sda
 
-bindall -b /mnt/team
+bindall()
 chroot /mnt/team update-grub
 
 
-unbindall -b /mnt/team
+unbindall()
