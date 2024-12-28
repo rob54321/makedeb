@@ -45,8 +45,9 @@ sed -i -e '/LABEL=ad64/d' /mnt/team/etc/fstab
 sed -i -e '$a\LABEL=team / ext4 defaults 0 1' /mnt/team/etc/fstab
 sed -i -e '$a\LABEL=ad64 /mnt/ad64 ext4 defaults,noauto 0 2' /mnt/team/etc/fstab
 
+
 # bind and chroot
-bindall()
+bindall
 
 
 chroot /mnt/team apt update
@@ -59,6 +60,22 @@ chroot /mnt/team adduser --add-extra-groups --comment "robert key room103 021959
 
 # add robert to sudo group
 chroot /mnt/team adduser robert sudo
+
+# make directory to mount ad64 in the chroot environment
+test -d /mnt/team/mnt/ad64 || mkdir -p /mnt/team/mnt/ad64
+# set ownership of ad64
+chown robert:robert /mnt/team/mnt
+chown robert:robert /mnt/team/mnt/ad64
+
+#set links for debhome and svn
+chroot /mnt/team ln -s /mnt/ad64/debhome /mnt/debhome
+chroot /mnt/team ln -s /mnt/ad64/svn /mnt/svn
+
+# mount ad64
+chroot /mnt/team mount -L ad64
+
+# set ownership of debhome and svn
+chroot /mnt/team chown robert:robert /mnt/debhome /mnt/svn
 
 # install config data for git rclone gh
 # and pubkey, sudo robert, debhome.sources
@@ -76,7 +93,7 @@ chroot /mnt/team apt install builddebiantree -y
 #set root password
 chroot /mnt/team passwd
 
-unbindall()
+unbindall
 
 # make /boot/grub if it does not exist
 test -d /mnt/team/boot/grub || mkdir -p /mnt/team/boot/grub
@@ -92,8 +109,9 @@ set color_hightlight=red/black' /mnt/team/boot/grub/custom.cfg
 
 grub-install --root-directory=/mnt/team /dev/sda
 
-bindall()
+bindall
 chroot /mnt/team update-grub
 
-
-unbindall()
+# umount ad64
+chroot /mnt/team umount /mnt/ad64
+unbindall
