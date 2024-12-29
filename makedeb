@@ -38,6 +38,11 @@ debootstrap noble /mnt/team http://ubuntu.mirror.ac.za
 
 # edit sources.list
 sed -i -e 's/main/main multiverse universe restricted/' /mnt/team/etc/apt/sources.list
+# append updates, secrurity, backports, proposed
+sed -i -e '$a\deb http://ubuntu.mirror.ac.za noble-updates main multiverse universe restricted\
+deb http://ubuntu.mirror.ac.za noble-security main multiverse universe restricted\
+deb http://ubuntu.mirror.ac.za noble-proposed main multiverse universe restricted\
+deb http://ubuntu.mirror.ac.za noble-backports main multiverse universe restricted' /mnt/team/etc/apt/sources.list
 
 # edit fstab
 sed -i -e '/LABEL=team/d' /mnt/team/etc/fstab
@@ -47,12 +52,6 @@ sed -i -e '$a\LABEL=ad64 /mnt/ad64 ext4 defaults,noauto 0 2' /mnt/team/etc/fstab
 
 # bind and chroot
 bindall
-
-# update in the change root environment
-chroot /mnt/team apt update
-
-# install image and essential networking stuff
-chroot /mnt/team apt install linux-image-generic linux-headers-generic xz-utils subversion git nano gh rclone coreutils network-manager grub2-common grub-efi-amd64 grub-efi-amd64-signed net-tools iputils-ping openssh-server fdisk mtools ntfs-3g dosfstools parted -y
 
 # make user robert
 chroot /mnt/team adduser --add-extra-groups --comment "robert key room103 0219596081 0218551556 nothing" robert
@@ -72,6 +71,13 @@ chroot /mnt/team ln -s /mnt/ad64/svn /mnt/svn
 # mount ad64
 chroot /mnt/team mount -L ad64
 chroot /mnt/team chown robert:robert /mnt/ad64
+
+# update in the change root environment
+chroot /mnt/team apt update
+
+# install image and essential networking stuff
+chroot /mnt/team apt install linux-image-generic linux-headers-generic xz-utils subversion git nano gh rclone coreutils network-manager grub2-common grub-efi-amd64 grub-efi-amd64-signed net-tools iputils-ping openssh-server fdisk mtools ntfs-3g dosfstools parted -y
+
 
 # install config data for git rclone gh
 # and pubkey, sudo robert, debhome.sources
