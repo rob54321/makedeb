@@ -45,15 +45,14 @@ sed -i -e '/LABEL=ad64/d' /mnt/team/etc/fstab
 sed -i -e '$a\LABEL=team / ext4 defaults 0 1' /mnt/team/etc/fstab
 sed -i -e '$a\LABEL=ad64 /mnt/ad64 ext4 defaults,noauto 0 2' /mnt/team/etc/fstab
 
-
 # bind and chroot
 bindall
 
-
+# update in the change root environment
 chroot /mnt/team apt update
 
-chroot /mnt/team apt install linux-image-generic linux-headers-generic xz-utils subversion git nano gh rclone coreutils network-manager grub2-common grub-efi-amd64 grub-efi-amd64-signed net-tools iputils-ping openssh-server -y
-
+# install image and essential networking stuff
+chroot /mnt/team apt install linux-image-generic linux-headers-generic xz-utils subversion git nano gh rclone coreutils network-manager grub2-common grub-efi-amd64 grub-efi-amd64-signed net-tools iputils-ping openssh-server fdisk mtools ntfs-3g dosfstools parted -y
 
 # make user robert
 chroot /mnt/team adduser --add-extra-groups --comment "robert key room103 0219596081 0218551556 nothing" robert
@@ -65,7 +64,6 @@ chroot /mnt/team adduser robert sudo
 test -d /mnt/team/mnt/ad64 || mkdir -p /mnt/team/mnt/ad64
 # set ownership of ad64
 chown robert:robert /mnt/team/mnt
-chown robert:robert /mnt/team/mnt/ad64
 
 #set links for debhome and svn
 chroot /mnt/team ln -s /mnt/ad64/debhome /mnt/debhome
@@ -73,9 +71,7 @@ chroot /mnt/team ln -s /mnt/ad64/svn /mnt/svn
 
 # mount ad64
 chroot /mnt/team mount -L ad64
-
-# set ownership of debhome and svn
-chroot /mnt/team chown robert:robert /mnt/debhome /mnt/svn
+chroot /mnt/team chown robert:robert /mnt/ad64
 
 # install config data for git rclone gh
 # and pubkey, sudo robert, debhome.sources
@@ -88,7 +84,7 @@ chroot /mnt/team dpkg -i /usr/local/bin/configdata_1.0.9_amd64.deb
 chroot /mnt/team apt update
 
 # install builddebiantree
-chroot /mnt/team apt install builddebiantree -y
+chroot /mnt/team apt install builddebiantree initialise-linux -y
 
 #set root password
 chroot /mnt/team passwd
