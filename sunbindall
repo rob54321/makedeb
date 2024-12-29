@@ -1,0 +1,7 @@
+#!/bin/bash
+umount /mnt/team/dev/pts
+umount /mnt/team/dev
+umount /mnt/team/tmp
+umount /mnt/team/sys
+umount /mnt/team/proc
+
