@@ -44,6 +44,15 @@ deb http://ubuntu.mirror.ac.za noble-security main multiverse universe restricte
 deb http://ubuntu.mirror.ac.za noble-proposed main multiverse universe restricted\
 deb http://ubuntu.mirror.ac.za noble-backports main multiverse universe restricted' /mnt/team/etc/apt/sources.list
 
+# to setup debhome and svn repository.
+# copy debhomepubkey.asc to /etc/apt/keyrings/
+# copy debhome.sources to /etc/apt/sources.list.d/
+# make directories if necessary
+test -d /mnt/team/etc/apt/keyrings || mkdir -p /mnt/team/etc/apt/keyrings
+test -d /mnt/team/etc/apt/sources.list.d || mkdir -p /mnt/team/etc/apt/sources.list.d
+cp -v /mnt/debhome/debhomepubkey.asc /mnt/team/etc/apt/keyrings/
+cp -v /mnt/debhome/debhome.sources /mnt/team/etc/apt/sources.list.d/
+
 # edit fstab
 sed -i -e '/LABEL=team/d' /mnt/team/etc/fstab
 sed -i -e '/LABEL=ad64/d' /mnt/team/etc/fstab
@@ -68,12 +77,14 @@ chown robert:robert /mnt/team/mnt
 chroot /mnt/team ln -s /mnt/ad64/debhome /mnt/debhome
 chroot /mnt/team ln -s /mnt/ad64/svn /mnt/svn
 
-# mount ad64
+# mount ad64 in chroot environment
 chroot /mnt/team mount -L ad64
 chroot /mnt/team chown robert:robert /mnt/ad64
+chroot /mnt/team chown robert:robert -h /mnt/debhome /mnt/svn
 
-# update in the change root environment
+# update in the change root environment and upgrade
 chroot /mnt/team apt update
+chroot /mnt/team apt full-upgrade -y
 
 # install image and essential networking stuff
 chroot /mnt/team apt install linux-image-generic linux-headers-generic xz-utils subversion git nano gh rclone coreutils network-manager grub2-common grub-efi-amd64 grub-efi-amd64-signed net-tools iputils-ping openssh-server fdisk mtools ntfs-3g dosfstools parted -y
@@ -83,14 +94,11 @@ chroot /mnt/team apt install linux-image-generic linux-headers-generic xz-utils 
 # and pubkey, sudo robert, debhome.sources
 # configdata needs xz-utils
 # user robert must exist
-cp -v /mnt/debhome/pool/myown/c/configdata/configdata*.deb /mnt/team/usr/local/bin/
-chroot /mnt/team dpkg -i /usr/local/bin/configdata_1.0.9_amd64.deb
-
-# update packages 
-chroot /mnt/team apt update
-
-# install builddebiantree
-chroot /mnt/team apt install builddebiantree initialise-linux -y
+# cp -v /mnt/debhome/pool/myown/c/configdata/configdata*.deb /mnt/team/usr/local/bin/
+#chroot /mnt/team dpkg -i /usr/local/bin/configdata_1.0.9_amd64.deb
+# install confgdata
+# dependency is xz-utils
+chroot /mnt/team apt install configdata builddebiantree initialise-linux -y
 
 #set root password
 chroot /mnt/team passwd
