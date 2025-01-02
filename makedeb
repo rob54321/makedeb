@@ -61,47 +61,17 @@ sed -i -e '$a\LABEL=ad64 /mnt/ad64 ext4 defaults,noauto 0 2' /mnt/team/etc/fstab
 
 # bind and chroot
 bindall
+# cp chrootinstall to /mnt/team/usr/local/bin
+# check if chrootinstall exists
+if test -x /usr/local/bin/chrootinstall; then
+	cp -v /usr/local/bin/chrootinstall /mnt/team/usr/local/bin/
+else
+	echo "chrootinstall not found, exiting..."
+	exit 1
+fi
 
-# make user robert
-chroot /mnt/team adduser --add-extra-groups --comment "robert key room103 0219596081 0218551556 nothing" robert
-
-# add robert to sudo group
-chroot /mnt/team adduser robert sudo
-
-# make directory to mount ad64 in the chroot environment
-test -d /mnt/team/mnt/ad64 || mkdir -p /mnt/team/mnt/ad64
-# set ownership of ad64
-chown robert:robert /mnt/team/mnt
-
-#set links for debhome and svn
-chroot /mnt/team ln -s /mnt/ad64/debhome /mnt/debhome
-chroot /mnt/team ln -s /mnt/ad64/svn /mnt/svn
-
-# mount ad64 in chroot environment
-chroot /mnt/team mount -L ad64
-chroot /mnt/team chown robert:robert /mnt/ad64
-chroot /mnt/team chown robert:robert -h /mnt/debhome /mnt/svn
-
-# update in the change root environment and upgrade
-chroot /mnt/team apt update
-chroot /mnt/team apt full-upgrade -y
-
-# install image and essential networking stuff
-chroot /mnt/team apt install linux-image-generic linux-headers-generic xz-utils subversion git nano gh rclone coreutils network-manager grub2-common grub-efi-amd64 grub-efi-amd64-signed net-tools iputils-ping openssh-server fdisk mtools ntfs-3g dosfstools parted -y
-
-
-# install config data for git rclone gh
-# and pubkey, sudo robert, debhome.sources
-# configdata needs xz-utils
-# user robert must exist
-# cp -v /mnt/debhome/pool/myown/c/configdata/configdata*.deb /mnt/team/usr/local/bin/
-#chroot /mnt/team dpkg -i /usr/local/bin/configdata_1.0.9_amd64.deb
-# install confgdata
-# dependency is xz-utils
-chroot /mnt/team apt install configdata builddebiantree initialise-linux -y
-
-#set root password
-chroot /mnt/team passwd
+# run chrootinstall in the chroot environment
+chroot /mnt/team /usr/local/bin/chrootinstall
 
 unbindall
 

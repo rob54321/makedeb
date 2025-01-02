@@ -1,0 +1,47 @@
+#!/bin/bash
+
+# this script is run in the chroot environment to install files
+
+# prevent error messages
+export LC_ALL=C
+
+# make user robert
+adduser --add-extra-groups --comment "robert key room103 0219596081 0218551556 nothing" robert
+
+# add robert to sudo group
+adduser robert sudo
+
+# make directory to mount ad64 in the chroot environment
+test -d /mnt/ad64 || mkdir -p /mnt/ad64
+# set ownership of ad64
+chown robert:robert /mnt
+
+#set links for debhome and svn
+ln -s /mnt/ad64/debhome /mnt/debhome
+ln -s /mnt/ad64/svn /mnt/svn
+
+# mount ad64 in chroot environment
+mount -L ad64
+chown robert:robert /mnt/ad64
+chown robert:robert -h /mnt/debhome /mnt/svn
+
+# update in the change root environment and upgrade
+apt update
+apt full-upgrade -y
+
+# install image and essential networking stuff
+apt install linux-image-generic linux-headers-generic xz-utils subversion git nano gh rclone coreutils network-manager grub2-common grub-efi-amd64 grub-efi-amd64-signed net-tools iputils-ping openssh-server fdisk mtools ntfs-3g dosfstools parted -y
+
+
+# install config data for git rclone gh
+# and pubkey, sudo robert, debhome.sources
+# configdata needs xz-utils
+# user robert must exist
+# cp -v /mnt/debhome/pool/myown/c/configdata/configdata*.deb /mnt/team/usr/local/bin/
+#chroot /mnt/team dpkg -i /usr/local/bin/configdata_1.0.9_amd64.deb
+# install confgdata
+# dependency is xz-utils
+apt install configdata builddebiantree initialise-linux -y
+
+#set root password
+passwd
