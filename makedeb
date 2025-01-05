@@ -34,7 +34,7 @@ findmnt /mnt/ad64
 test $? -eq 0 || mount /mnt/ad64
 
 # install linux
-debootstrap noble /mnt/team http://ubuntu.mirror.ac.za
+debootstrap --arch=amd64 noble /mnt/team http://ubuntu.mirror.ac.za
 
 # edit sources.list
 sed -i -e 's/main/main multiverse universe restricted/' /mnt/team/etc/apt/sources.list

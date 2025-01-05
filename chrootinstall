@@ -5,11 +5,15 @@
 # prevent error messages
 export LC_ALL=C
 
-# make user robert
+# make user robert, will prompt for password
 adduser --add-extra-groups --comment "robert key room103 0219596081 0218551556 nothing" robert
 
 # add robert to sudo group
 adduser robert sudo
+
+#set root password
+echo "Enter a password for root"
+passwd
 
 # make directory to mount ad64 in the chroot environment
 test -d /mnt/ad64 || mkdir -p /mnt/ad64
@@ -43,5 +47,3 @@ apt install linux-image-generic linux-headers-generic xz-utils subversion git na
 # dependency is xz-utils
 apt install configdata builddebiantree initialise-linux -y
 
-#set root password
-passwd
